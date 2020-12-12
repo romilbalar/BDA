@@ -1,0 +1,24 @@
+su hduser
+sudo cp -r /home/RomilBalar/Documents/Average /home/hduser/lab8
+sudo cp /home/RomilBalar/Documents/1901-input.txt /home/hduser/lab8
+cd /home/hduser/lab8
+# create MANIFEST.MF file with contents : Main-Class : Average_Driver
+sudo nano MANIFEST.MF
+sudo javac -classpath $(hadoop classpath) -d . *.java
+sudo jar cvf average.jar *.class
+jar -tf average.jar
+cd /usr/local/hadoop/sbin/
+./start-dfs.sh
+./start-yarn.sh
+jps
+cd ~
+hadoop fs -ls /
+hadoop fs -mkdir /rgs2
+hadoop fs -copyFromLocal /home/hduser/lab8/1901-input.txt /rgs2/1901-input.txt
+hadoop fs -ls /rgs2
+## execute:
+hadoop jar /home/hduser/lab8/average.jar Average_Driver /rgs2/1901-input.txt /rgs2/output/
+hadoop fs -ls /rgs2/output
+hadoop fs -cat /rgs2/output/part-r-00000
+hadoop fs -copyToLocal /rgs2/output/part-r-00000 $HOME/average-output.txt
+/usr/local/hadoop/sbin/stop-all.sh

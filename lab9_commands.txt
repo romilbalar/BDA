@@ -1,0 +1,43 @@
+su hduser
+$HADOOP_HOME/sbin/start-dfs.sh
+$HADOOP_HOME/sbin/start-yarn.sh
+jps
+cd $HIVE_HOME/bin
+hive
+
+// Create database
+create database if not exists Employee comment 'skn bda hive';
+use Employee;
+
+// 1. Create external table Emp
+create external table if not exists Emp (Empl_ID int, Emp_Name String, Designation String, Salary int) row format delimited fields terminated by '\t' lines terminated by '\n';
+
+// 2. Load data from external file
+load data local inpath '/home/hduser/employee.txt' overwrite into table Emp;
+select * from Emp;
+
+// 3. View with salary > 30000
+create view Emp_view as select * from Emp where Salary>30000;
+select * from Emp_view;
+
+// 4. Alter table to add new column:
+alter table Emp add columns (Dept_ID int);
+// Adding values into new column:
+load data local inpath '/home/hduser/employee_dept.txt' overwrite into table Emp;
+select * from Emp order by Dept_ID;
+
+// 5. Query to retrieve the number of employees in each department whose salary is greater than 30000:
+select count(*),Dept_ID from Emp where Salary > 30000 group by Dept_ID;
+
+// 6. New table Department
+create table if not exists Department (Dept_ID int , Dept_name String, Emp_ID int) row format delimited fields terminated by '\t' lines terminated by '\n';
+
+load data local inpath '/home/hduser/dept.txt' overwrite into table Department;
+
+select * from Department;
+
+// 7. Cumulative details:
+select e.Empl_ID, e.Emp_Name, e.Designation, e.Salary, e.Dept_ID, d.Dept_Name from Emp e join Department d ON (d.Dept_ID = e.Dept_ID);
+
+/* Stop HDFS and YARN */
+$HADOOP_HOME/sbin/stop-all.sh
